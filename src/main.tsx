@@ -150,7 +150,7 @@ function TrackSVG({
 
       {/* Finish Line */}
       {(() => {
-        const fTrackPct = (startPos + finishTrackPct) % 100;
+        const fTrackPct = finishTrackPct;
         const fData = getTrackData(fTrackPct);
         return (
           <g>
@@ -587,7 +587,7 @@ function ProducerDashboard() {
       </div>
 
       {/* RIGHT: Control Panel */}
-      <div className="w-[520px] bg-slate-800 border-l-4 border-amber-500 flex flex-col">
+      <div className="w-[580px] bg-slate-800 border-l-4 border-amber-500 flex flex-col">
         <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5">
           <h1 className="text-2xl font-black text-black tracking-wider">PRODUCER CONTROL</h1>
         </div>
@@ -604,7 +604,7 @@ function ProducerDashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           
           {activeTab === 'track' && (
             <>
