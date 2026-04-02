@@ -587,7 +587,7 @@ function ProducerDashboard() {
       </div>
 
       {/* RIGHT: Control Panel */}
-      <div className="w-[420px] bg-slate-800 border-l-4 border-amber-500 flex flex-col">
+      <div className="w-[520px] bg-slate-800 border-l-4 border-amber-500 flex flex-col">
         <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5">
           <h1 className="text-2xl font-black text-black tracking-wider">PRODUCER CONTROL</h1>
         </div>
@@ -642,16 +642,16 @@ function ProducerDashboard() {
 
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-blue-500">
                 <h2 className="text-xl font-black text-blue-400 uppercase tracking-wider mb-4">Furlong Markers</h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {markers.slice().sort((a, b) => a.pos - b.pos).map(marker => (
-                    <div key={marker.id} className={`bg-slate-800 rounded-xl p-4 border-2 ${marker.id === selectedRaceMarkerId ? 'border-amber-500' : 'border-slate-700'}`}>
-                      <div className="flex items-center space-x-3 mb-3">
-                        {marker.id === selectedRaceMarkerId && <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black">FINISH</span>}
-                        <input type="text" value={marker.label} onChange={(e) => updateMarker(marker.id, 'label', e.target.value)} className="flex-1 bg-slate-900 border-2 border-slate-600 rounded-lg px-4 py-2 text-lg text-white font-bold" />
-                        <span className="text-amber-400 font-black text-2xl w-20 text-right">{marker.pos.toFixed(1)}F</span>
-                        <button onClick={() => removeMarker(marker.id)} className="w-10 h-10 bg-red-600 hover:bg-red-500 rounded-lg flex items-center justify-center text-white font-black">X</button>
+                    <div key={marker.id} className={`bg-slate-800 rounded-xl p-3 border-2 ${marker.id === selectedRaceMarkerId ? 'border-amber-500' : 'border-slate-700'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {marker.id === selectedRaceMarkerId && <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black shrink-0">FINISH</span>}
+                        <input type="text" value={marker.label} onChange={(e) => updateMarker(marker.id, 'label', e.target.value)} className="w-20 bg-slate-900 border-2 border-slate-600 rounded px-3 py-2 text-white font-bold text-center" />
+                        <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="flex-1 h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" />
+                        <span className="text-amber-400 font-black text-xl w-16 text-right shrink-0">{marker.pos.toFixed(1)}F</span>
+                        <button onClick={() => removeMarker(marker.id)} className="w-8 h-8 bg-red-600 hover:bg-red-500 rounded flex items-center justify-center text-white font-black shrink-0">X</button>
                       </div>
-                      <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="w-full h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" />
                     </div>
                   ))}
                 </div>
