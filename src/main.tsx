@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import './index.css';
-import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, MonitorPlay } from 'lucide-react';
+import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, MonitorPlay, Share2 } from 'lucide-react';
 
 const L_STRAIGHT = 400;
 const L_CURVE = Math.PI * 100;
@@ -543,11 +543,23 @@ function ProducerDashboard() {
                   </div>
                   <a
                     href="/broadcast"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full font-bold flex items-center"
                   >
                     <Monitor size={18} className="mr-2" />
                     FULLSCREEN
                   </a>
+                  <button
+                    onClick={() => {
+                      const url = window.location.origin + '/broadcast';
+                      navigator.clipboard.writeText(url);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-full font-bold flex items-center"
+                  >
+                    <Share2 size={18} className="mr-2" />
+                    SHARE
+                  </button>
                 </div>
               </div>
 
@@ -599,7 +611,7 @@ function ProducerDashboard() {
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Start Position</h2>
                 <div className="relative">
-                  <input type="range" min="0" max="100" step="1" value={startPos} onChange={(e) => setStartPos(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" style={{ padding: '0 8px' }} />
+                  <input type="range" min="0" max="100" step="1" value={startPos} onChange={(e) => setStartPos(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-emerald-400 font-black text-2xl">{startPos}%</span>
@@ -639,7 +651,7 @@ function ProducerDashboard() {
                         <span className="text-amber-400 font-black text-2xl w-20 text-right">{marker.pos.toFixed(1)}F</span>
                         <button onClick={() => removeMarker(marker.id)} className="w-10 h-10 bg-red-600 hover:bg-red-500 rounded-lg flex items-center justify-center text-white font-black">X</button>
                       </div>
-                      <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="w-full h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" style={{ padding: '0 8px' }} />
+                      <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="w-full h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" />
                     </div>
                   ))}
                 </div>
@@ -699,7 +711,7 @@ function ProducerDashboard() {
                   <button onClick={handleReset} className="px-8 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black text-xl">RESET</button>
                 </div>
                 <div className="relative">
-                  <input type="range" min="0" max="100" step="0.1" value={leadProgress} onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" style={{ padding: '0 8px' }} />
+                  <input type="range" min="0" max="100" step="0.1" value={leadProgress} onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-amber-400 font-black text-2xl">{leadProgress.toFixed(1)}%</span>
@@ -710,7 +722,7 @@ function ProducerDashboard() {
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Speed</h2>
                 <div className="relative">
-                  <input type="range" min="1" max="15" step="0.5" value={speedMultiplier} onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" style={{ padding: '0 8px' }} />
+                  <input type="range" min="1" max="15" step="0.5" value={speedMultiplier} onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">1x</span>
                     <span className="text-emerald-400 font-black text-2xl">{speedMultiplier.toFixed(1)}x</span>
@@ -733,7 +745,7 @@ function ProducerDashboard() {
                           {horse.speedMod > 0 ? '+' : ''}{horse.speedMod}%
                         </span>
                       </div>
-                      <input type="range" min="-30" max="30" step="1" value={horse.speedMod} onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer" style={{ accentColor: horse.color, padding: '0 8px' }} />
+                      <input type="range" min="-30" max="30" step="1" value={horse.speedMod} onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer" style={{ accentColor: horse.color }} />
                     </div>
                   ))}
                 </div>
