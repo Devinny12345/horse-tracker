@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, Flag, Edit2, Activity, Monitor, X, Palette } from 'lucide-react';
+import { Play, Square, Flag, Edit2, Activity, Monitor, X, Palette, GripVertical } from 'lucide-react';
 
 const L_STRAIGHT = 400;
 const L_CURVE = Math.PI * 100;
@@ -35,7 +35,8 @@ export default function App() {
     { id: 2, label: '2 F', pos: 2 },
     { id: 3, label: '3 F', pos: 3 },
     { id: 4, label: '4 F', pos: 4 },
-    { id: 5, label: '5 F', pos: 5 }
+    { id: 5, label: '5 F', pos: 5 },
+    { id: 6, label: '6 F', pos: 6 }
   ]);
 
   const [horses, setHorses] = useState([
@@ -169,18 +170,29 @@ export default function App() {
     raceStatus = "FINISHED";
   }
 
-  const getOverlayButtonStyle = (furlongs: number) => {
-    const isSelected = raceDistanceFurlongs === furlongs;
+  const getButtonHighlight = (furlongs: number) => {
+    const diff = Math.abs(raceDistanceFurlongs - furlongs);
+    if (diff < 0.25) return 'ring-4 ring-white ring-offset-2 ring-offset-slate-900';
+    return '';
+  };
+
+  const getButtonStyle = (furlongs: number) => {
     const isOverlayBtn = furlongs > 6;
+    const isSelected = Math.abs(raceDistanceFurlongs - furlongs) < 0.25;
     
     if (isSelected) {
-      return 'ring-4 ring-white ring-offset-2 ring-offset-slate-900';
+      if (isOverlayBtn) {
+        if (furlongs >= 10) return 'bg-orange-400 text-black';
+        if (furlongs >= 8) return 'bg-orange-500 text-white';
+        return 'bg-orange-600 text-white';
+      }
+      return 'bg-amber-400 text-black';
     }
     
     if (isOverlayBtn) {
-      if (furlongs >= 10) return 'bg-orange-500 text-white hover:bg-orange-400';
-      if (furlongs >= 8) return 'bg-orange-600 text-white hover:bg-orange-500';
-      return 'bg-orange-700 text-white hover:bg-orange-600';
+      if (furlongs >= 10) return 'bg-orange-600 text-white hover:bg-orange-500';
+      if (furlongs >= 8) return 'bg-orange-700 text-white hover:bg-orange-600';
+      return 'bg-orange-800 text-white hover:bg-orange-700';
     }
     
     return 'bg-slate-700 text-slate-300 hover:bg-slate-600';
@@ -193,22 +205,19 @@ export default function App() {
       style={{ background: isChroma ? chromaColor : 'transparent' }}
     >
       <div className="w-full h-full">
-        <svg viewBox="0 0 800 400" className="w-full h-full" style={{ background: isChroma ? 'transparent' : 'transparent' }}>
-          {!isChroma && (
-            <rect width="800" height="400" fill="transparent" />
-          )}
+        <svg viewBox="0 0 800 400" className="w-full h-full" style={{ background: 'transparent' }}>
           <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#1e293b"} strokeWidth="22" />
-          <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#475569"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset} />
-          <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#475569"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset + L_TOTAL} />
+          <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#3b82f6"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset} />
+          <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#3b82f6"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset + L_TOTAL} />
           <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#1e293b"} strokeWidth="2" strokeDasharray="10 10" />
 
-          {markers.filter(m => m.pos <= raceDistanceFurlongs).map(marker => {
+          {markers.filter(m => m.pos <= raceDistanceFurlongs && m.pos > 0).map(marker => {
             const trackPct = getMarkerTrackPct(marker.pos);
             const mData = getTrackData(trackPct);
             return (
               <g key={`marker-${marker.id}`}>
-                <line x1={mData.x - mData.nx * 15} y1={mData.y - mData.ny * 15} x2={mData.x + mData.nx * 15} y2={mData.y + mData.ny * 15} stroke={isChroma ? chromaColor : "#94a3b8"} strokeWidth="4" />
-                <text x={mData.x + mData.nx * 35} y={mData.y + mData.ny * 35 + 4} fill={isChroma ? chromaColor : "#94a3b8"} fontSize="12" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{marker.label}</text>
+                <line x1={mData.x - mData.nx * 15} y1={mData.y - mData.ny * 15} x2={mData.x + mData.nx * 15} y2={mData.y + mData.ny * 15} stroke={isChroma ? chromaColor : "#60a5fa"} strokeWidth="4" />
+                <text x={mData.x + mData.nx * 35} y={mData.y + mData.ny * 35 + 4} fill={isChroma ? chromaColor : "#60a5fa"} fontSize="12" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{marker.label}</text>
               </g>
             );
           })}
@@ -253,20 +262,18 @@ export default function App() {
         </svg>
       </div>
       
-      {/* Exit button */}
       <button
         onClick={() => setBroadcastMode(false)}
         className="absolute top-4 right-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold flex items-center"
       >
         <X size={20} className="mr-2" />
-        Exit Broadcast
+        Exit
       </button>
     </div>
   );
 
   return (
     <div className={`min-h-screen flex ${isChroma && !broadcastMode ? chromaColor : 'bg-slate-950'} text-white font-sans`}>
-      {/* Broadcast Mode Overlay */}
       {broadcastMode && <BroadcastView />}
 
       {/* LEFT: Broadcast Output - 3:2 Aspect Ratio */}
@@ -298,26 +305,47 @@ export default function App() {
                 </div>
               )}
 
-              {/* Track SVG - Takes remaining space */}
+              {/* Track SVG - BLUE active path, ORANGE progress when racing */}
               <div className="flex-1 flex items-center justify-center p-4 min-h-0" style={{ background: isChroma && !broadcastMode ? chromaColor : undefined }}>
                 <svg viewBox="0 0 800 400" className="w-full h-full drop-shadow-2xl" style={{ background: isChroma && !broadcastMode ? 'transparent' : undefined }}>
-                  <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#0f172a"} strokeWidth="26" />
+                  {/* Base track (dark) */}
                   <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#1e293b"} strokeWidth="22" />
-                  <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#475569"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset} />
-                  <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#475569"} strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset + L_TOTAL} />
+                  
+                  {/* Active track path - BLUE when not racing, ORANGE when racing */}
+                  <path 
+                    d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" 
+                    fill="none" 
+                    stroke={isChroma ? chromaColor : (isPlaying ? "#f97316" : "#3b82f6")} 
+                    strokeWidth="22" 
+                    strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} 
+                    strokeDashoffset={-startOffset}
+                    style={{ filter: isChroma ? 'none' : (isPlaying ? 'drop-shadow(0 0 10px #f97316)' : 'drop-shadow(0 0 6px #3b82f6)') }}
+                  />
+                  <path 
+                    d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" 
+                    fill="none" 
+                    stroke={isChroma ? chromaColor : (isPlaying ? "#f97316" : "#3b82f6")} 
+                    strokeWidth="22" 
+                    strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} 
+                    strokeDashoffset={-startOffset + L_TOTAL}
+                  />
+                  
+                  {/* Center dashed line */}
                   <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke={isChroma ? chromaColor : "#1e293b"} strokeWidth="2" strokeDasharray="10 10" />
 
-                  {markers.filter(m => m.pos <= raceDistanceFurlongs).map(marker => {
+                  {/* User-defined Markers on Track */}
+                  {markers.filter(m => m.pos <= raceDistanceFurlongs && m.pos > 0).map(marker => {
                     const trackPct = getMarkerTrackPct(marker.pos);
                     const mData = getTrackData(trackPct);
                     return (
                       <g key={`marker-${marker.id}`}>
-                        <line x1={mData.x - mData.nx * 15} y1={mData.y - mData.ny * 15} x2={mData.x + mData.nx * 15} y2={mData.y + mData.ny * 15} stroke={isChroma ? chromaColor : "#94a3b8"} strokeWidth="4" />
-                        <text x={mData.x + mData.nx * 35} y={mData.y + mData.ny * 35 + 4} fill={isChroma ? chromaColor : "#94a3b8"} fontSize="12" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{marker.label}</text>
+                        <line x1={mData.x - mData.nx * 15} y1={mData.y - mData.ny * 15} x2={mData.x + mData.nx * 15} y2={mData.y + mData.ny * 15} stroke={isChroma ? chromaColor : "#60a5fa"} strokeWidth="4" />
+                        <text x={mData.x + mData.nx * 35} y={mData.y + mData.ny * 35 + 4} fill={isChroma ? chromaColor : "#60a5fa"} fontSize="12" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{marker.label}</text>
                       </g>
                     );
                   })}
 
+                  {/* Finish Line */}
                   {(() => {
                     const finishTrackPct = getMarkerTrackPct(raceDistanceFurlongs);
                     const fTrackPct = (startPos + finishTrackPct) % 100;
@@ -330,6 +358,7 @@ export default function App() {
                     );
                   })()}
 
+                  {/* Start Line */}
                   {(() => {
                     const sData = getTrackData(startPos);
                     return (
@@ -340,6 +369,7 @@ export default function App() {
                     );
                   })()}
 
+                  {/* Horses */}
                   {horses.map((horse, idx) => {
                     let rawProgress = horseProgresses[horse.id] !== undefined ? horseProgresses[horse.id] : raceProgress;
                     const boundedProgress = Math.max(0, rawProgress);
@@ -373,7 +403,7 @@ export default function App() {
       </div>
 
       {/* RIGHT: Control Panel - Bold UI */}
-      <div className="w-96 bg-slate-800 border-l-4 border-amber-500 flex flex-col">
+      <div className="w-[420px] bg-slate-800 border-l-4 border-amber-500 flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5">
           <h1 className="text-2xl font-black text-black tracking-wider">PRODUCER CONTROL</h1>
@@ -416,55 +446,58 @@ export default function App() {
           </button>
         </div>
 
-        {/* Control Content - Full Width Sliders */}
+        {/* Control Content - Extra Wide Sliders */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           
           {/* TRACK SETUP */}
           {activeTab === 'track' && (
             <>
-              {/* Race Distance - Large Buttons */}
+              {/* Race Distance - Large Buttons with Dynamic Highlighting */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-amber-400 uppercase tracking-wider mb-4">Race Distance</h2>
                 
+                {/* 1F - 5F buttons */}
                 <div className="grid grid-cols-5 gap-2 mb-3">
                   {[1, 2, 3, 4, 5].map(furlongs => (
                     <button
                       key={furlongs}
                       onClick={() => setRaceDistanceFurlongs(furlongs)}
-                      className={`py-4 rounded-lg font-black text-xl transition-all ${getOverlayButtonStyle(furlongs)}`}
+                      className={`py-5 rounded-lg font-black text-2xl transition-all ${getButtonStyle(furlongs)} ${getButtonHighlight(furlongs)}`}
                     >
                       {furlongs}F
                     </button>
                   ))}
                 </div>
                 
+                {/* 6F - 10F overlay buttons */}
                 <div className="grid grid-cols-5 gap-2 mb-4">
                   {[6, 7, 8, 9, 10].map(furlongs => (
                     <button
                       key={furlongs}
                       onClick={() => setRaceDistanceFurlongs(furlongs)}
-                      className={`py-4 rounded-lg font-black text-xl transition-all ${getOverlayButtonStyle(furlongs)}`}
+                      className={`py-5 rounded-lg font-black text-2xl transition-all ${getButtonStyle(furlongs)} ${getButtonHighlight(furlongs)}`}
                     >
                       {furlongs}F
                     </button>
                   ))}
                 </div>
 
-                <div className="bg-slate-800 rounded-lg p-3 mb-3">
+                {/* Distance Display */}
+                <div className="bg-slate-800 rounded-lg p-4 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className={`font-bold text-2xl ${isOverlay ? 'text-orange-400' : 'text-white'}`}>
+                    <span className={`font-black text-3xl ${isOverlay ? 'text-orange-400' : 'text-white'}`}>
                       {raceDistanceFurlongs} F
                     </span>
                     {isOverlay && (
-                      <span className="bg-orange-500 text-black px-3 py-1 rounded font-black text-lg">
+                      <span className="bg-orange-500 text-black px-4 py-2 rounded-lg font-black text-xl">
                         {overlayPercent}%
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Full Width Slider */}
-                <div className="px-2">
+                {/* Extra Wide Slider */}
+                <div className="relative">
                   <input 
                     type="range" 
                     min="1" 
@@ -472,15 +505,16 @@ export default function App() {
                     step="0.5" 
                     value={raceDistanceFurlongs} 
                     onChange={(e) => setRaceDistanceFurlongs(parseFloat(e.target.value))} 
-                    className="w-full h-6 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    style={{ padding: '0 8px' }}
                   />
                 </div>
               </div>
 
-              {/* Start Line */}
+              {/* Start Line - Extra Wide Slider */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Start Line Position</h2>
-                <div className="px-2">
+                <div className="relative">
                   <input 
                     type="range" 
                     min="0" 
@@ -488,9 +522,10 @@ export default function App() {
                     step="1" 
                     value={startPos} 
                     onChange={(e) => setStartPos(parseInt(e.target.value))} 
-                    className="w-full h-6 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                    className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                    style={{ padding: '0 8px' }}
                   />
-                  <div className="flex justify-between mt-2">
+                  <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-emerald-400 font-black text-2xl">{startPos}%</span>
                     <span className="text-slate-500 font-bold">100%</span>
@@ -498,28 +533,51 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Furlong Markers - Full Width */}
+              {/* Furlong Markers - Clickable Presets + Draggable */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
-                <h2 className="text-xl font-black text-slate-300 uppercase tracking-wider mb-4">Furlong Markers</h2>
+                <h2 className="text-xl font-black text-blue-400 uppercase tracking-wider mb-4">Furlong Markers</h2>
+                
+                {/* Quick Select Buttons */}
+                <div className="grid grid-cols-6 gap-2 mb-4">
+                  {[1, 2, 3, 4, 5, 6].map(f => (
+                    <button
+                      key={f}
+                      onClick={() => {
+                        const existing = markers.find(m => Math.abs(m.pos - f) < 0.25);
+                        if (!existing) {
+                          const newId = Math.max(...markers.map(m => m.id), 0) + 1;
+                          setMarkers([...markers, { id: newId, label: `${f} F`, pos: f }]);
+                        }
+                      }}
+                      className="py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-lg"
+                    >
+                      {f}F
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Markers List with Full-Width Sliders */}
                 <div className="space-y-4">
                   {markers.map(marker => (
-                    <div key={marker.id} className="bg-slate-800 rounded-lg p-4">
+                    <div key={marker.id} className="bg-slate-800 rounded-xl p-4">
                       <div className="flex items-center space-x-3 mb-3">
-                        <button 
-                          onClick={() => removeMarker(marker.id)} 
-                          className="w-10 h-10 bg-red-600 hover:bg-red-500 rounded-lg flex items-center justify-center text-white font-bold"
-                        >
-                          X
-                        </button>
+                        <GripVertical className="text-slate-500" size={20} />
                         <input
                           type="text"
                           value={marker.label}
                           onChange={(e) => updateMarker(marker.id, 'label', e.target.value)}
-                          className="flex-1 bg-slate-900 border-2 border-slate-600 rounded-lg px-4 py-2 text-xl text-white font-bold focus:border-amber-400 focus:outline-none"
+                          className="flex-1 bg-slate-900 border-2 border-slate-600 rounded-lg px-4 py-2 text-lg text-white font-bold focus:border-blue-400 focus:outline-none"
                         />
-                        <span className="text-amber-400 font-black text-2xl w-20 text-right">{marker.pos}F</span>
+                        <span className="text-amber-400 font-black text-2xl w-16 text-right">{marker.pos.toFixed(1)}F</span>
+                        <button 
+                          onClick={() => removeMarker(marker.id)} 
+                          className="w-10 h-10 bg-red-600 hover:bg-red-500 rounded-lg flex items-center justify-center text-white font-black"
+                        >
+                          X
+                        </button>
                       </div>
-                      <div className="px-2">
+                      {/* Full Width Slider */}
+                      <div className="relative">
                         <input
                           type="range"
                           min="0.5"
@@ -527,12 +585,17 @@ export default function App() {
                           step="0.1"
                           value={marker.pos}
                           onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))}
-                          className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-400"
+                          className="w-full h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400"
+                          style={{ padding: '0 8px' }}
                         />
                       </div>
                     </div>
                   ))}
                 </div>
+                
+                {markers.length === 0 && (
+                  <p className="text-slate-500 text-center py-4 font-bold">Click buttons above to add markers</p>
+                )}
               </div>
             </>
           )}
@@ -586,7 +649,7 @@ export default function App() {
             <>
               {/* Chroma Settings */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
-                <h2 className="text-xl font-black text-purple-400 uppercase tracking-wider mb-4">Output Settings</h2>
+                <h2 className="text-xl font-black text-purple-400 uppercase tracking-wider mb-4">Chroma Key</h2>
                 
                 <div className="flex items-center space-x-4 mb-4">
                   <button
@@ -602,38 +665,40 @@ export default function App() {
                 </div>
 
                 {isChroma && (
-                  <div className="flex items-center space-x-4">
-                    <Palette className="text-purple-400" size={24} />
-                    <span className="text-slate-300 font-bold">Chroma Color</span>
+                  <div className="flex items-center space-x-4 bg-slate-800 rounded-lg p-3">
+                    <Palette className="text-purple-400" size={28} />
                     <input 
                       type="color" 
                       value={chromaColor}
                       onChange={(e) => setChromaColor(e.target.value)}
-                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-purple-500"
+                      className="w-14 h-14 rounded-lg cursor-pointer border-2 border-purple-500"
                     />
-                    <span className="text-purple-400 font-mono font-bold">{chromaColor.toUpperCase()}</span>
+                    <span className="text-purple-400 font-mono font-black text-xl">{chromaColor.toUpperCase()}</span>
                   </div>
                 )}
               </div>
 
-              {/* Progress Bar */}
+              {/* Progress Bar - ORANGE when racing */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-amber-400 uppercase tracking-wider mb-4">Race Progress</h2>
                 
-                <div className={`h-16 rounded-xl overflow-hidden mb-4 border-4 ${
-                  isOverlay ? 'border-orange-500' : 'border-red-800'
+                {/* Big Progress Bar */}
+                <div className={`h-20 rounded-xl overflow-hidden mb-4 border-4 ${
+                  isOverlay ? 'border-orange-500' : 'border-slate-600'
                 }`}>
                   <div className="relative h-full">
                     <div 
                       className={`absolute top-0 left-0 h-full transition-all duration-100 ${
-                        isOverlay 
-                          ? 'bg-gradient-to-r from-orange-600 to-orange-400' 
-                          : 'bg-gradient-to-r from-green-600 to-green-400'
+                        isPlaying 
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-300 animate-pulse' 
+                          : isOverlay 
+                            ? 'bg-gradient-to-r from-orange-700 to-orange-500' 
+                            : 'bg-gradient-to-r from-green-700 to-green-500'
                       }`}
                       style={{ width: `${raceProgress}%` }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white font-black text-2xl drop-shadow-lg">
+                      <span className="text-white font-black text-3xl drop-shadow-lg">
                         {progressFurlongs.toFixed(2)} / {raceDistanceFurlongs.toFixed(2)} F
                       </span>
                     </div>
@@ -644,13 +709,13 @@ export default function App() {
                 <div className="flex space-x-3 mb-4">
                   <button 
                     onClick={() => setIsPlaying(!isPlaying)} 
-                    className={`flex-1 flex justify-center items-center py-5 rounded-xl font-black text-xl transition-all ${
+                    className={`flex-1 flex justify-center items-center py-6 rounded-xl font-black text-2xl transition-all ${
                       isPlaying 
                         ? 'bg-red-600 hover:bg-red-500 text-white' 
                         : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                     }`}
                   >
-                    {isPlaying ? <Square size={28} className="mr-2" /> : <Play size={28} className="mr-2" />}
+                    {isPlaying ? <Square size={32} className="mr-3" /> : <Play size={32} className="mr-3" />}
                     {isPlaying ? 'PAUSE' : 'START'}
                   </button>
                   <button 
@@ -661,8 +726,8 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Scrubber - Full Width */}
-                <div className="px-2">
+                {/* Full Width Scrubber */}
+                <div className="relative">
                   <input 
                     type="range" 
                     min="0" 
@@ -670,19 +735,20 @@ export default function App() {
                     step="0.1" 
                     value={raceProgress} 
                     onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} 
-                    className="w-full h-6 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" 
+                    className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    style={{ padding: '0 8px' }}
                   />
-                  <div className="flex justify-between mt-2">
+                  <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-amber-400 font-black text-2xl">{raceProgress.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
 
-              {/* Speed */}
+              {/* Speed - Extra Wide Slider */}
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Speed</h2>
-                <div className="px-2">
+                <div className="relative">
                   <input 
                     type="range" 
                     min="1" 
@@ -690,9 +756,10 @@ export default function App() {
                     step="0.5" 
                     value={speedMultiplier} 
                     onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} 
-                    className="w-full h-6 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" 
+                    className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                    style={{ padding: '0 8px' }}
                   />
-                  <div className="flex justify-between mt-2">
+                  <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">1x</span>
                     <span className="text-emerald-400 font-black text-2xl">{speedMultiplier.toFixed(1)}x</span>
                     <span className="text-slate-500 font-bold">15x</span>
@@ -723,7 +790,7 @@ export default function App() {
                         value={horse.speedMod} 
                         onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} 
                         className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer" 
-                        style={{ accentColor: horse.color }} 
+                        style={{ accentColor: horse.color, padding: '0 8px' }}
                       />
                     </div>
                   ))}
