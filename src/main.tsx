@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import './index.css';
-import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, MonitorPlay, Share2 } from 'lucide-react';
+import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, MonitorPlay, Share2, Move, Maximize2, Eye, EyeOff, Layout } from 'lucide-react';
 
 const L_STRAIGHT = 400;
 const L_CURVE = Math.PI * 100;
@@ -223,6 +223,10 @@ function BroadcastOnly() {
   const [speedMultiplier] = useState(5);
   const [isChroma, setIsChroma] = useState(false);
   const [chromaColor, setChromaColor] = useState('#00ff00');
+  const [graphicX, setGraphicX] = useState(640);
+  const [graphicY, setGraphicY] = useState(360);
+  const [graphicWidth, setGraphicWidth] = useState(1280);
+  const [isGraphicVisible, setIsGraphicVisible] = useState(true);
 
   const selectedMarker = markers.find(m => m.id === selectedRaceMarkerId);
   const raceDistanceFurlongs = selectedMarker ? selectedMarker.pos : 6;
@@ -312,6 +316,17 @@ function BroadcastOnly() {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* ON/OFF Animation */}
+          <button
+            onClick={() => setIsGraphicVisible(!isGraphicVisible)}
+            className={`flex items-center px-6 py-3 rounded-xl font-bold text-lg ${
+              isGraphicVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+            }`}
+          >
+            {isGraphicVisible ? <Eye size={24} className="mr-2" /> : <EyeOff size={24} className="mr-2" />}
+            {isGraphicVisible ? 'ON' : 'OFF'}
+          </button>
+
           {/* Chroma Toggle */}
           <button
             onClick={() => setIsChroma(!isChroma)}
@@ -345,10 +360,81 @@ function BroadcastOnly() {
         </div>
       </div>
 
-      {/* Track */}
+      {/* Track with Position Controls */}
       <div className="flex-1 flex items-center justify-center p-8" style={{ background: isChroma ? chromaColor : undefined }}>
-        <div className="w-full max-w-[calc(100vh-200px)] aspect-[3/2]">
-          <div className="w-full h-full rounded-xl overflow-hidden" style={{ background: isChroma ? chromaColor : '#0f172a' }}>
+        {/* Position Controls */}
+        <div className="absolute top-24 left-4 bg-slate-800/90 rounded-xl p-4 border-2 border-amber-500 z-50">
+          <div className="flex items-center gap-2 mb-3">
+            <Move size={18} className="text-amber-400" />
+            <span className="text-amber-400 font-black text-sm">POSITION</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 text-xs w-6">X:</span>
+              <input
+                type="range"
+                min="0"
+                max="1920"
+                value={graphicX}
+                onChange={(e) => setGraphicX(parseInt(e.target.value))}
+                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+              />
+              <input
+                type="number"
+                value={graphicX}
+                onChange={(e) => setGraphicX(parseInt(e.target.value) || 0)}
+                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 text-xs w-6">Y:</span>
+              <input
+                type="range"
+                min="0"
+                max="1080"
+                value={graphicY}
+                onChange={(e) => setGraphicY(parseInt(e.target.value))}
+                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+              />
+              <input
+                type="number"
+                value={graphicY}
+                onChange={(e) => setGraphicY(parseInt(e.target.value) || 0)}
+                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Maximize2 size={14} className="text-slate-400" />
+              <input
+                type="range"
+                min="320"
+                max="1920"
+                value={graphicWidth}
+                onChange={(e) => setGraphicWidth(parseInt(e.target.value))}
+                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+              />
+              <input
+                type="number"
+                value={graphicWidth}
+                onChange={(e) => setGraphicWidth(parseInt(e.target.value) || 320)}
+                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="rounded-xl overflow-hidden transition-all duration-500"
+          style={{
+            width: `${graphicWidth}px`,
+            height: `${graphicWidth * 0.667}px`,
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'calc(100vh - 200px)',
+            opacity: isGraphicVisible ? 1 : 0,
+            transform: isGraphicVisible ? 'scale(1)' : 'scale(0.8)',
+          }}
+        >
+          <div className="w-full h-full" style={{ background: isChroma ? chromaColor : '#0f172a' }}>
             <TrackSVG
               startPos={startPos}
               markers={markers}
@@ -391,6 +477,10 @@ function ProducerDashboard() {
   const [isChroma, setIsChroma] = useState(false);
   const [chromaColor, setChromaColor] = useState('#00ff00');
   const [activeTab, setActiveTab] = useState('track');
+  const [graphicX, setGraphicX] = useState(640);
+  const [graphicY, setGraphicY] = useState(360);
+  const [graphicWidth, setGraphicWidth] = useState(1280);
+  const [isGraphicVisible, setIsGraphicVisible] = useState(true);
 
   const selectedMarker = markers.find(m => m.id === selectedRaceMarkerId);
   const raceDistanceFurlongs = selectedMarker ? selectedMarker.pos : 6;
@@ -602,6 +692,9 @@ function ProducerDashboard() {
           <button onClick={() => setActiveTab('control')} className={`flex-1 py-5 px-4 text-center font-black text-lg uppercase tracking-wider transition-all border-l border-slate-700 ${activeTab === 'control' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
             <Activity size={24} className="mx-auto mb-1" />Race
           </button>
+          <button onClick={() => setActiveTab('layout')} className={`flex-1 py-5 px-4 text-center font-black text-lg uppercase tracking-wider transition-all border-l border-slate-700 ${activeTab === 'layout' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+            <Layout size={24} className="mx-auto mb-1" />Layout
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -611,7 +704,7 @@ function ProducerDashboard() {
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Start Position</h2>
                 <div className="relative">
-                  <input type="range" min="0" max="100" step="1" value={startPos} onChange={(e) => setStartPos(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
+                  <input type="range" min="0" max="100" step="1" value={startPos} onChange={(e) => setStartPos(parseInt(e.target.value))} className="w-full h-10 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-emerald-400 font-black text-2xl">{startPos}%</span>
@@ -648,7 +741,7 @@ function ProducerDashboard() {
                       <div className="flex items-center gap-2 mb-2">
                         {marker.id === selectedRaceMarkerId && <span className="bg-amber-500 text-black px-2 py-1 rounded text-xs font-black shrink-0">FINISH</span>}
                         <input type="text" value={marker.label} onChange={(e) => updateMarker(marker.id, 'label', e.target.value)} className="w-20 bg-slate-900 border-2 border-slate-600 rounded px-3 py-2 text-white font-bold text-center" />
-                        <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="flex-1 h-5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" />
+                        <input type="range" min="0.5" max="12" step="0.1" value={marker.pos} onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))} className="flex-1 h-10 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400" />
                         <span className="text-amber-400 font-black text-xl w-16 text-right shrink-0">{marker.pos.toFixed(1)}F</span>
                         <button onClick={() => removeMarker(marker.id)} className="w-8 h-8 bg-red-600 hover:bg-red-500 rounded flex items-center justify-center text-white font-black shrink-0">X</button>
                       </div>
@@ -711,7 +804,7 @@ function ProducerDashboard() {
                   <button onClick={handleReset} className="px-8 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black text-xl">RESET</button>
                 </div>
                 <div className="relative">
-                  <input type="range" min="0" max="100" step="0.1" value={leadProgress} onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" />
+                  <input type="range" min="0" max="100" step="0.1" value={leadProgress} onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} className="w-full h-10 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">0%</span>
                     <span className="text-amber-400 font-black text-2xl">{leadProgress.toFixed(1)}%</span>
@@ -722,7 +815,7 @@ function ProducerDashboard() {
               <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
                 <h2 className="text-xl font-black text-emerald-400 uppercase tracking-wider mb-4">Speed</h2>
                 <div className="relative">
-                  <input type="range" min="1" max="15" step="0.5" value={speedMultiplier} onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
+                  <input type="range" min="1" max="15" step="0.5" value={speedMultiplier} onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} className="w-full h-10 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
                   <div className="flex justify-between mt-3">
                     <span className="text-slate-500 font-bold">1x</span>
                     <span className="text-emerald-400 font-black text-2xl">{speedMultiplier.toFixed(1)}x</span>
@@ -745,9 +838,100 @@ function ProducerDashboard() {
                           {horse.speedMod > 0 ? '+' : ''}{horse.speedMod}%
                         </span>
                       </div>
-                      <input type="range" min="-30" max="30" step="1" value={horse.speedMod} onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer" style={{ accentColor: horse.color }} />
+                      <input type="range" min="-30" max="30" step="1" value={horse.speedMod} onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer" style={{ accentColor: horse.color }} />
                     </div>
                   ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'layout' && (
+            <>
+              <div className="bg-slate-900 rounded-xl p-5 border-2 border-purple-500">
+                <h2 className="text-xl font-black text-purple-400 uppercase tracking-wider mb-4">Graphic Position (1920x1080)</h2>
+                <div className="space-y-4">
+                  <div className="bg-slate-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-bold">X Position</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1920"
+                        value={graphicX}
+                        onChange={(e) => setGraphicX(parseInt(e.target.value) || 0)}
+                        className="w-24 bg-slate-900 border-2 border-slate-600 rounded-lg px-3 py-2 text-white font-bold text-center"
+                      />
+                    </div>
+                    <input type="range" min="0" max="1920" step="10" value={graphicX} onChange={(e) => setGraphicX(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400" />
+                    <div className="flex justify-between text-slate-500 text-sm mt-1">
+                      <span>0</span>
+                      <span>960</span>
+                      <span>1920</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-bold">Y Position</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1080"
+                        value={graphicY}
+                        onChange={(e) => setGraphicY(parseInt(e.target.value) || 0)}
+                        className="w-24 bg-slate-900 border-2 border-slate-600 rounded-lg px-3 py-2 text-white font-bold text-center"
+                      />
+                    </div>
+                    <input type="range" min="0" max="1080" step="10" value={graphicY} onChange={(e) => setGraphicY(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400" />
+                    <div className="flex justify-between text-slate-500 text-sm mt-1">
+                      <span>0</span>
+                      <span>540</span>
+                      <span>1080</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-bold">Width</span>
+                      <input
+                        type="number"
+                        min="320"
+                        max="1920"
+                        value={graphicWidth}
+                        onChange={(e) => setGraphicWidth(parseInt(e.target.value) || 320)}
+                        className="w-24 bg-slate-900 border-2 border-slate-600 rounded-lg px-3 py-2 text-white font-bold text-center"
+                      />
+                    </div>
+                    <input type="range" min="320" max="1920" step="20" value={graphicWidth} onChange={(e) => setGraphicWidth(parseInt(e.target.value))} className="w-full h-8 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400" />
+                    <div className="flex justify-between text-slate-500 text-sm mt-1">
+                      <span>320</span>
+                      <span>960</span>
+                      <span>1920</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-xl p-5 border-2 border-green-500">
+                <h2 className="text-xl font-black text-green-400 uppercase tracking-wider mb-4">ON/OFF Animation</h2>
+                <button
+                  onClick={() => setIsGraphicVisible(!isGraphicVisible)}
+                  className={`w-full py-6 rounded-xl font-black text-2xl transition-all flex items-center justify-center ${
+                    isGraphicVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                  }`}
+                >
+                  {isGraphicVisible ? <Eye size={32} className="mr-3" /> : <EyeOff size={32} className="mr-3" />}
+                  {isGraphicVisible ? 'GRAPHIC ON' : 'GRAPHIC OFF'}
+                </button>
+                <p className="text-slate-400 text-sm text-center mt-3">Toggle graphic visibility with fade animation</p>
+              </div>
+
+              <div className="bg-slate-900 rounded-xl p-5 border-2 border-slate-700">
+                <h2 className="text-xl font-black text-blue-400 uppercase tracking-wider mb-4">Quick Presets</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => { setGraphicX(640); setGraphicY(360); setGraphicWidth(1280); }} className="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold">Center Large</button>
+                  <button onClick={() => { setGraphicX(960); setGraphicY(540); setGraphicWidth(640); }} className="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold">Center Small</button>
+                  <button onClick={() => { setGraphicX(0); setGraphicY(540); setGraphicWidth(640); }} className="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold">Left</button>
+                  <button onClick={() => { setGraphicX(1280); setGraphicY(540); setGraphicWidth(640); }} className="py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold">Right</button>
                 </div>
               </div>
             </>
