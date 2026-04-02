@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, Settings, Flag, Plus, Trash2, Edit2, FastForward, Activity, Target } from 'lucide-react';
+import { Play, Square, Settings, Flag, Plus, Trash2, Edit2, FastForward, Activity } from 'lucide-react';
 
 const L_STRAIGHT = 400;
 const L_CURVE = Math.PI * 100;
 const L_TOTAL = L_STRAIGHT * 2 + L_CURVE * 2;
+const TOTAL_OVAL_FURLONGS = 6.0;
 
 function getTrackData(percent: number) {
   let p = ((percent % 100) + 100) % 100;
@@ -29,12 +30,12 @@ function getTrackData(percent: number) {
 export default function App() {
   const [startPos, setStartPos] = useState(0);
   const [raceDistanceFurlongs, setRaceDistanceFurlongs] = useState(6);
-  const [finishPos, setFinishPos] = useState(25);
   const [markers, setMarkers] = useState([
-    { id: 1, label: '1 FURLONG', pos: 4.2 },
-    { id: 2, label: '2 FURLONGS', pos: 8.4 },
-    { id: 3, label: '3 FURLONGS', pos: 12.6 },
-    { id: 4, label: '4 FURLONGS', pos: 16.8 }
+    { id: 1, label: '1 F', pos: 1 },
+    { id: 2, label: '2 F', pos: 2 },
+    { id: 3, label: '3 F', pos: 3 },
+    { id: 4, label: '4 F', pos: 4 },
+    { id: 5, label: '5 F', pos: 5 }
   ]);
 
   const [horses, setHorses] = useState([
@@ -51,7 +52,7 @@ export default function App() {
   const [isChroma, setIsChroma] = useState(false);
   const [activeTab, setActiveTab] = useState('track');
 
-  const raceDistancePct = (raceDistanceFurlongs / 6) * 100;
+  const raceDistancePct = (raceDistanceFurlongs / TOTAL_OVAL_FURLONGS) * 100;
 
   const engineRef = useRef({
     progress: 0,
@@ -140,13 +141,6 @@ export default function App() {
     setHorses(horses.filter(h => h.id !== id));
   };
 
-  const addMarker = () => {
-    if (markers.length >= 6) return;
-    const newId = Math.max(...markers.map(m => m.id), 0) + 1;
-    const pos = (newId * 4.2);
-    setMarkers([...markers, { id: newId, label: `${newId} FURLONG${newId > 1 ? 'S' : ''}`, pos }]);
-  };
-
   const updateMarker = (id: number, field: string, value: any) => {
     setMarkers(markers.map(m => m.id === id ? { ...m, [field]: value } : m));
   };
@@ -155,17 +149,18 @@ export default function App() {
     setMarkers(markers.filter(m => m.id !== id));
   };
 
-  const markerPositions = markers.map(m => ({
-    ...m,
-    trackPct: (m.pos / 6) * 100
-  }));
+  const getMarkerTrackPct = (furlongPos: number) => {
+    return (furlongPos / TOTAL_OVAL_FURLONGS) * 100;
+  };
 
-  const finishTrackPct = (finishPos / 6) * 100;
+  const getFinishTrackPct = () => {
+    return getMarkerTrackPct(raceDistanceFurlongs);
+  };
+
   const highlightLength = (raceDistancePct / 100) * L_TOTAL;
   const startOffset = (startPos / 100) * L_TOTAL;
 
   const progressFurlongs = (raceProgress / 100) * raceDistanceFurlongs;
-  const progressPercent = raceProgress;
 
   let raceStatus = "AWAITING POST";
   let estSpeed = "0.0";
@@ -208,12 +203,13 @@ export default function App() {
             <svg viewBox="0 0 800 400" className="w-full h-auto drop-shadow-2xl">
               <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#0f172a" strokeWidth="26" />
               <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#1e293b" strokeWidth="22" />
-              <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#374151" strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset} />
-              <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#374151" strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset + L_TOTAL} />
+              <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#475569" strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset} />
+              <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#475569" strokeWidth="22" strokeDasharray={`${highlightLength} ${L_TOTAL * 2}`} strokeDashoffset={-startOffset + L_TOTAL} />
               <path d="M 200,300 L 600,300 A 100,100 0 0,0 600,100 L 200,100 A 100,100 0 0,0 200,300 Z" fill="none" stroke="#1e293b" strokeWidth="2" strokeDasharray="10 10" />
 
-              {markerPositions.map(marker => {
-                const mData = getTrackData(marker.trackPct);
+              {markers.filter(m => m.pos <= raceDistanceFurlongs).map(marker => {
+                const trackPct = getMarkerTrackPct(marker.pos);
+                const mData = getTrackData(trackPct);
                 return (
                   <g key={`marker-${marker.id}`}>
                     <line x1={mData.x - mData.nx * 15} y1={mData.y - mData.ny * 15} x2={mData.x + mData.nx * 15} y2={mData.y + mData.ny * 15} stroke="#94a3b8" strokeWidth="4" />
@@ -223,7 +219,8 @@ export default function App() {
               })}
 
               {(() => {
-                const fData = getTrackData(finishTrackPct);
+                const fTrackPct = (startPos + getFinishTrackPct()) % 100;
+                const fData = getTrackData(fTrackPct);
                 return (
                   <g>
                     <line x1={fData.x - fData.nx * 18} y1={fData.y - fData.ny * 18} x2={fData.x + fData.nx * 18} y2={fData.y + fData.ny * 18} stroke="#ef4444" strokeWidth="8" />
@@ -308,17 +305,16 @@ export default function App() {
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-700">
           {activeTab === 'track' && (
             <div className="space-y-6">
+              {/* Race Distance Selection */}
               <div className="bg-slate-800 p-5 rounded-xl border border-slate-700">
-                <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-6 flex items-center">
-                  <Target size={16} className="mr-2" /> Race Distance
-                </h3>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-4">Race Distance</h3>
+                
+                <div className="grid grid-cols-3 gap-2 mb-4">
                   {[1, 2, 3, 4, 5, 6].map(furlongs => (
                     <button
                       key={furlongs}
                       onClick={() => setRaceDistanceFurlongs(furlongs)}
-                      className={`py-3 px-4 rounded-lg font-bold text-lg transition-all ${
+                      className={`py-3 px-2 rounded-lg font-bold text-sm transition-all ${
                         raceDistanceFurlongs === furlongs
                           ? 'bg-amber-500 text-black'
                           : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -330,69 +326,75 @@ export default function App() {
                 </div>
 
                 <div className="bg-slate-900/50 rounded-lg p-4 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-bold">Total Distance</p>
+                  <p className="text-xs text-slate-500 uppercase font-bold">Selected Distance</p>
                   <p className="text-3xl font-mono text-white mt-1">{raceDistanceFurlongs} <span className="text-lg text-slate-400 font-sans">Furlongs</span></p>
                 </div>
               </div>
 
+              {/* Start Line Position */}
               <div className="bg-slate-800 p-5 rounded-xl border border-slate-700">
-                <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-6">Course Markers</h3>
-
-                <div className="mb-6">
-                  <div className="flex justify-between text-xs font-bold mb-2">
-                    <span className="text-emerald-400">START LINE</span>
-                    <span className="text-emerald-400 font-mono">{startPos}%</span>
-                  </div>
-                  <input type="range" min="0" max="100" step="1" value={startPos} onChange={(e) => setStartPos(parseInt(e.target.value))} className="w-full h-3 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
-                  <p className="text-[10px] text-slate-500 mt-1">Position around the oval</p>
-                </div>
-
+                <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4">Start Line Position</h3>
+                
                 <div className="mb-4">
                   <div className="flex justify-between text-xs font-bold mb-2">
-                    <span className="text-red-400">FINISH LINE</span>
-                    <span className="text-red-400 font-mono">{finishPos} Furlongs</span>
+                    <span className="text-emerald-400">POSITION</span>
+                    <span className="text-emerald-400 font-mono">{startPos}%</span>
                   </div>
-                  <input type="range" min="1" max={raceDistanceFurlongs} step="0.1" value={finishPos} onChange={(e) => setFinishPos(parseFloat(e.target.value))} className="w-full h-3 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-red-400" />
-                  <p className="text-[10px] text-slate-500 mt-1">Distance from start</p>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    step="1" 
+                    value={startPos} 
+                    onChange={(e) => setStartPos(parseInt(e.target.value))} 
+                    className="w-full h-3 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-400" 
+                  />
+                  <p className="text-[10px] text-slate-500 mt-2">Move start line around the oval track</p>
                 </div>
               </div>
 
+              {/* Furlong Markers */}
               <div className="bg-slate-800 p-5 rounded-xl border border-slate-700">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Furlong Markers ({markers.length}/6)</h3>
-                  <button onClick={addMarker} disabled={markers.length >= 6} className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center transition-colors">
-                    <Plus size={14} className="mr-1" /> ADD
-                  </button>
-                </div>
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Furlong Markers</h3>
+                
                 <div className="space-y-3">
-                  {markers.map(marker => (
-                    <div key={marker.id} className="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center space-x-3">
-                      <button onClick={() => removeMarker(marker.id)} className="text-slate-500 hover:text-red-400 p-1">
-                        <Trash2 size={16} />
-                      </button>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
+                  {markers.filter(m => m.pos <= raceDistanceFurlongs).map(marker => (
+                    <div key={marker.id} className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                      <div className="flex items-center space-x-3">
+                        <button 
+                          onClick={() => removeMarker(marker.id)} 
+                          className="text-slate-500 hover:text-red-400 p-1"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-2">
+                            <input
+                              type="text"
+                              value={marker.label}
+                              onChange={(e) => updateMarker(marker.id, 'label', e.target.value)}
+                              className="bg-transparent border-none text-sm text-white font-bold focus:outline-none w-20"
+                            />
+                            <span className="text-amber-400 font-mono text-sm font-bold">{marker.pos}F</span>
+                          </div>
                           <input
-                            type="text"
-                            value={marker.label}
-                            onChange={(e) => updateMarker(marker.id, 'label', e.target.value)}
-                            className="bg-transparent border-none text-sm text-white font-bold focus:outline-none w-32"
+                            type="range"
+                            min="0.5"
+                            max={raceDistanceFurlongs}
+                            step="0.1"
+                            value={marker.pos}
+                            onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))}
+                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-400"
                           />
-                          <span className="text-amber-400 font-mono text-xs">{marker.pos.toFixed(1)}F</span>
                         </div>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max={raceDistanceFurlongs}
-                          step="0.1"
-                          value={marker.pos}
-                          onChange={(e) => updateMarker(marker.id, 'pos', parseFloat(e.target.value))}
-                          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-400"
-                        />
                       </div>
                     </div>
                   ))}
                 </div>
+
+                {markers.filter(m => m.pos <= raceDistanceFurlongs).length === 0 && (
+                  <p className="text-slate-500 text-sm text-center py-2">No markers for this distance</p>
+                )}
               </div>
             </div>
           )}
@@ -431,35 +433,50 @@ export default function App() {
 
           {activeTab === 'control' && (
             <div className="space-y-6">
+              {/* Race Progress */}
               <div className="bg-slate-800 p-5 rounded-xl border border-slate-700">
                 <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-4">Race Progress</h3>
                 
-                <div className="relative h-8 bg-red-900/50 rounded-full overflow-hidden mb-4 border-2 border-red-800">
+                {/* Progress Bar */}
+                <div className="relative h-10 bg-red-900/50 rounded-lg overflow-hidden mb-4 border-2 border-red-800">
                   <div
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-100"
-                    style={{ width: `${progressPercent}%` }}
+                    style={{ width: `${raceProgress}%` }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-white font-bold text-sm drop-shadow-lg">
-                      {progressFurlongs.toFixed(2)} / {raceDistanceFurlongs.toFixed(2)} FURLONGS
+                      {progressFurlongs.toFixed(2)} / {raceDistanceFurlongs.toFixed(2)} F
                     </span>
                   </div>
                 </div>
 
+                {/* Play Controls */}
                 <div className="flex space-x-3 mb-6">
-                  <button onClick={() => setIsPlaying(!isPlaying)} className={`flex-1 flex justify-center items-center py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${isPlaying ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/50' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/50'}`}>
+                  <button 
+                    onClick={() => setIsPlaying(!isPlaying)} 
+                    className={`flex-1 flex justify-center items-center py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${isPlaying ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/50' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/50'}`}
+                  >
                     {isPlaying ? <><Square size={20} className="mr-2" /> PAUSE</> : <><Play size={20} className="mr-2" /> START</>}
                   </button>
                   <button onClick={handleReset} className="px-6 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-colors">RESET</button>
                 </div>
 
+                {/* Speed & Scrubber */}
                 <div className="space-y-5">
                   <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
                     <div className="flex justify-between text-xs text-slate-400 font-bold mb-2">
                       <span className="flex items-center"><FastForward size={14} className="mr-1" /> MASTER SPEED</span>
                       <span className="text-emerald-400 font-mono">{speedMultiplier.toFixed(1)}x</span>
                     </div>
-                    <input type="range" min="1" max="15" step="0.5" value={speedMultiplier} onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} className="w-full h-3 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="15" 
+                      step="0.5" 
+                      value={speedMultiplier} 
+                      onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))} 
+                      className="w-full h-3 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-400" 
+                    />
                   </div>
 
                   <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
@@ -467,11 +484,20 @@ export default function App() {
                       <span>RACE SCRUBBER</span>
                       <span className="text-amber-400 font-mono">{raceProgress.toFixed(1)}%</span>
                     </div>
-                    <input type="range" min="0" max="100" step="0.1" value={raceProgress} onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-400" />
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="100" 
+                      step="0.1" 
+                      value={raceProgress} 
+                      onChange={(e) => { setIsPlaying(false); handleMasterScrub(parseFloat(e.target.value)); }} 
+                      className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-400" 
+                    />
                   </div>
                 </div>
               </div>
 
+              {/* Live Jockeying */}
               <div className="bg-slate-800 p-5 rounded-xl border border-slate-700">
                 <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-4 flex items-center"><Activity size={16} className="mr-2" /> Live Jockeying</h3>
 
@@ -492,7 +518,16 @@ export default function App() {
                           <span>SLOW</span>
                           <span>FAST</span>
                         </div>
-                        <input type="range" min="-30" max="30" step="1" value={horse.speedMod} onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" style={{ accentColor: horse.color }} />
+                        <input 
+                          type="range" 
+                          min="-30" 
+                          max="30" 
+                          step="1" 
+                          value={horse.speedMod} 
+                          onChange={(e) => updateHorse(horse.id, 'speedMod', parseFloat(e.target.value))} 
+                          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer" 
+                          style={{ accentColor: horse.color }} 
+                        />
                       </div>
                     </div>
                   ))}
