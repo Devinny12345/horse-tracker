@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import './index.css';
-import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, MonitorPlay, Share2, Move, Maximize2, Eye, EyeOff, Layout } from 'lucide-react';
+import { Play, Square, Flag, Edit2, Activity, Monitor, Palette, Share2, Eye, EyeOff, Layout } from 'lucide-react';
 
 const L_STRAIGHT = 400;
 const L_CURVE = Math.PI * 100;
@@ -201,253 +201,83 @@ function TrackSVG({
 }
 
 function BroadcastOnly() {
-  const [startPos] = useState(0);
-  const [selectedRaceMarkerId] = useState<number | null>(1);
-  const [markers] = useState<Marker[]>([
-    { id: 1, label: '1 F', pos: 1 },
-    { id: 2, label: '2 F', pos: 2 },
-    { id: 3, label: '3 F', pos: 3 },
-    { id: 4, label: '4 F', pos: 4 },
-    { id: 5, label: '5 F', pos: 5 },
-    { id: 6, label: '6 F', pos: 6 }
-  ]);
-  const [horses] = useState<Horse[]>([
-    { id: 1, name: 'Rider 1', color: '#fbbf24', speedMod: 0 },
-    { id: 2, name: 'Rider 2', color: '#ef4444', speedMod: 0 },
-    { id: 3, name: 'Rider 3', color: '#3b82f6', speedMod: 0 },
-    { id: 4, name: 'Rider 4', color: '#10b981', speedMod: 0 }
-  ]);
-  const [raceProgress, setRaceProgress] = useState(0);
-  const [horseProgresses, setHorseProgresses] = useState<Record<number, number>>({});
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speedMultiplier] = useState(5);
-  const [isChroma, setIsChroma] = useState(false);
-  const [chromaColor, setChromaColor] = useState('#00ff00');
-  const [graphicX, setGraphicX] = useState(640);
-  const [graphicY, setGraphicY] = useState(360);
-  const [graphicWidth, setGraphicWidth] = useState(1280);
-  const [isGraphicVisible, setIsGraphicVisible] = useState(true);
-
-  const selectedMarker = markers.find(m => m.id === selectedRaceMarkerId);
-  const raceDistanceFurlongs = selectedMarker ? selectedMarker.pos : 6;
-  const leadHorseFurlongs = (raceProgress / 100) * raceDistanceFurlongs;
-
-  const engineRef = useRef({
-    progress: 0,
-    speed: 5,
-    isPlaying: false,
-    horses: [] as Horse[],
-    horseProgresses: {} as Record<number, number>
+  const [state, setState] = useState({
+    startPos: 0,
+    selectedRaceMarkerId: 1,
+    markers: [
+      { id: 1, label: '1 F', pos: 1 },
+      { id: 2, label: '2 F', pos: 2 },
+      { id: 3, label: '3 F', pos: 3 },
+      { id: 4, label: '4 F', pos: 4 },
+      { id: 5, label: '5 F', pos: 5 },
+      { id: 6, label: '6 F', pos: 6 }
+    ],
+    horses: [
+      { id: 1, name: 'Rider 1', color: '#fbbf24', speedMod: 0 },
+      { id: 2, name: 'Rider 2', color: '#ef4444', speedMod: 0 },
+      { id: 3, name: 'Rider 3', color: '#3b82f6', speedMod: 0 },
+      { id: 4, name: 'Rider 4', color: '#10b981', speedMod: 0 }
+    ],
+    raceProgress: 0,
+    horseProgresses: {} as Record<number, number>,
+    isChroma: false,
+    chromaColor: '#00ff00',
+    graphicWidth: 1280,
+    isGraphicVisible: true
   });
 
-  useEffect(() => { engineRef.current.speed = speedMultiplier; }, [speedMultiplier]);
-  useEffect(() => { engineRef.current.isPlaying = isPlaying; }, [isPlaying]);
-  useEffect(() => { engineRef.current.horses = horses; }, [horses]);
-
   useEffect(() => {
-    let lastTime = performance.now();
-    let frameId: number;
-
-    const tick = (time: number) => {
-      const delta = (time - lastTime) / 1000;
-      lastTime = time;
-
-      if (engineRef.current.isPlaying) {
-        let newProg = engineRef.current.progress + (engineRef.current.speed * delta);
-        if (newProg >= 100) {
-          newProg = 100;
-          engineRef.current.isPlaying = false;
-          setIsPlaying(false);
+    const loadState = () => {
+      const saved = localStorage.getItem('horseRaceState');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setState(prev => ({
+            ...prev,
+            ...parsed,
+            graphicWidth: parsed.graphicWidth || 1280,
+            isGraphicVisible: parsed.isGraphicVisible !== undefined ? parsed.isGraphicVisible : true
+          }));
+        } catch (e) {
+          console.log('Using default state');
         }
-
-        const newHP = { ...engineRef.current.horseProgresses };
-        engineRef.current.horses.forEach(h => {
-          let current = newHP[h.id] !== undefined ? newHP[h.id] : engineRef.current.progress;
-          let hSpeed = engineRef.current.speed * (1 + (h.speedMod / 100));
-          newHP[h.id] = current + (hSpeed * delta);
-        });
-
-        engineRef.current.progress = newProg;
-        engineRef.current.horseProgresses = newHP;
-
-        setRaceProgress(newProg);
-        setHorseProgresses(newHP);
       }
-      frameId = requestAnimationFrame(tick);
     };
-
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
+    loadState();
+    const interval = setInterval(loadState, 50);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleReset = () => {
-    setIsPlaying(false);
-    engineRef.current.isPlaying = false;
-    setRaceProgress(0);
-    engineRef.current.progress = 0;
-    setHorseProgresses({});
-    engineRef.current.horseProgresses = {};
-  };
+  const selectedMarker = state.markers.find(m => m.id === state.selectedRaceMarkerId);
+  const raceDistanceFurlongs = selectedMarker ? selectedMarker.pos : 6;
 
   return (
-    <div className="fixed inset-0 bg-slate-900 flex flex-col">
-      {/* Top Controls Bar */}
-      <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold text-lg ${
-              isPlaying ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
-            }`}
-          >
-            {isPlaying ? <Square size={24} className="mr-2" /> : <Play size={24} className="mr-2" />}
-            {isPlaying ? 'PAUSE' : 'START'}
-          </button>
-          <button
-            onClick={handleReset}
-            className="px-6 py-3 bg-slate-700 text-white rounded-xl font-bold text-lg"
-          >
-            RESET
-          </button>
-        </div>
-
-        <div className="text-amber-400 font-mono font-bold text-2xl">
-          {leadHorseFurlongs.toFixed(2)} / {raceDistanceFurlongs.toFixed(2)} F
-        </div>
-
-        <div className="flex items-center space-x-4">
-          {/* ON/OFF Animation */}
-          <button
-            onClick={() => setIsGraphicVisible(!isGraphicVisible)}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold text-lg ${
-              isGraphicVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-            }`}
-          >
-            {isGraphicVisible ? <Eye size={24} className="mr-2" /> : <EyeOff size={24} className="mr-2" />}
-            {isGraphicVisible ? 'ON' : 'OFF'}
-          </button>
-
-          {/* Chroma Toggle */}
-          <button
-            onClick={() => setIsChroma(!isChroma)}
-            className={`px-6 py-3 rounded-xl font-bold text-lg ${
-              isChroma ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300'
-            }`}
-          >
-            {isChroma ? 'CHROMA ON' : 'CHROMA OFF'}
-          </button>
-
-          {/* Color Picker */}
-          {isChroma && (
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={chromaColor}
-                onChange={(e) => setChromaColor(e.target.value)}
-                className="w-12 h-12 rounded-lg cursor-pointer border-2 border-purple-500"
-              />
-              <span className="text-purple-400 font-mono font-bold text-lg">{chromaColor.toUpperCase()}</span>
-            </div>
-          )}
-
-          <a
-            href="/"
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-lg flex items-center"
-          >
-            <MonitorPlay size={24} className="mr-2" />
-            CONTROLS
-          </a>
-        </div>
-      </div>
-
-      {/* Track with Position Controls */}
-      <div className="flex-1 flex items-center justify-center p-8" style={{ background: isChroma ? chromaColor : undefined }}>
-        {/* Position Controls */}
-        <div className="absolute top-24 left-4 bg-slate-800/90 rounded-xl p-4 border-2 border-amber-500 z-50">
-          <div className="flex items-center gap-2 mb-3">
-            <Move size={18} className="text-amber-400" />
-            <span className="text-amber-400 font-black text-sm">POSITION</span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-xs w-6">X:</span>
-              <input
-                type="range"
-                min="0"
-                max="1920"
-                value={graphicX}
-                onChange={(e) => setGraphicX(parseInt(e.target.value))}
-                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-              <input
-                type="number"
-                value={graphicX}
-                onChange={(e) => setGraphicX(parseInt(e.target.value) || 0)}
-                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-xs w-6">Y:</span>
-              <input
-                type="range"
-                min="0"
-                max="1080"
-                value={graphicY}
-                onChange={(e) => setGraphicY(parseInt(e.target.value))}
-                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-              <input
-                type="number"
-                value={graphicY}
-                onChange={(e) => setGraphicY(parseInt(e.target.value) || 0)}
-                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Maximize2 size={14} className="text-slate-400" />
-              <input
-                type="range"
-                min="320"
-                max="1920"
-                value={graphicWidth}
-                onChange={(e) => setGraphicWidth(parseInt(e.target.value))}
-                className="w-32 h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-              <input
-                type="number"
-                value={graphicWidth}
-                onChange={(e) => setGraphicWidth(parseInt(e.target.value) || 320)}
-                className="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm text-center"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="rounded-xl overflow-hidden transition-all duration-500"
-          style={{
-            width: `${graphicWidth}px`,
-            height: `${graphicWidth * 0.667}px`,
-            maxWidth: 'calc(100vw - 32px)',
-            maxHeight: 'calc(100vh - 200px)',
-            opacity: isGraphicVisible ? 1 : 0,
-            transform: isGraphicVisible ? 'scale(1)' : 'scale(0.8)',
-          }}
-        >
-          <div className="w-full h-full" style={{ background: isChroma ? chromaColor : '#0f172a' }}>
-            <TrackSVG
-              startPos={startPos}
-              markers={markers}
-              horses={horses}
-              horseProgresses={horseProgresses}
-              raceProgress={raceProgress}
-              raceDistanceFurlongs={raceDistanceFurlongs}
-              selectedRaceMarkerId={selectedRaceMarkerId}
-              isChroma={isChroma}
-              chromaColor={chromaColor}
-            />
-          </div>
-        </div>
+    <div 
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: state.isChroma ? state.chromaColor : '#0f172a' }}
+    >
+      <div
+        className="transition-all duration-500"
+        style={{
+          width: `${state.graphicWidth}px`,
+          height: `${state.graphicWidth * 0.667}px`,
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          opacity: state.isGraphicVisible ? 1 : 0,
+          transform: state.isGraphicVisible ? 'scale(1)' : 'scale(0.8)',
+        }}
+      >
+        <TrackSVG
+          startPos={state.startPos}
+          markers={state.markers}
+          horses={state.horses}
+          horseProgresses={state.horseProgresses}
+          raceProgress={state.raceProgress}
+          raceDistanceFurlongs={raceDistanceFurlongs}
+          selectedRaceMarkerId={state.selectedRaceMarkerId}
+          isChroma={state.isChroma}
+          chromaColor={state.chromaColor}
+        />
       </div>
     </div>
   );
@@ -481,6 +311,21 @@ function ProducerDashboard() {
   const [graphicY, setGraphicY] = useState(360);
   const [graphicWidth, setGraphicWidth] = useState(1280);
   const [isGraphicVisible, setIsGraphicVisible] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem('horseRaceState', JSON.stringify({
+      startPos,
+      selectedRaceMarkerId,
+      markers,
+      horses,
+      raceProgress,
+      horseProgresses,
+      isChroma,
+      chromaColor,
+      graphicWidth,
+      isGraphicVisible
+    }));
+  }, [startPos, selectedRaceMarkerId, markers, horses, raceProgress, horseProgresses, isChroma, chromaColor, graphicWidth, isGraphicVisible]);
 
   const selectedMarker = markers.find(m => m.id === selectedRaceMarkerId);
   const raceDistanceFurlongs = selectedMarker ? selectedMarker.pos : 6;
