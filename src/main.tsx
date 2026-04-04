@@ -201,6 +201,7 @@ function TrackSVG({
 }
 
 function BroadcastOnly() {
+  const [tick, setTick] = useState(0);
   const [state, setState] = useState({
     startPos: 0,
     selectedRaceMarkerId: 1,
@@ -223,33 +224,35 @@ function BroadcastOnly() {
     isChroma: false,
     chromaColor: '#00ff00',
     graphicWidth: 1280,
-    isGraphicVisible: true,
-    _timestamp: 0
+    isGraphicVisible: true
   });
 
   useEffect(() => {
-    let lastJson = '';
+    let lastRaceProgress = -1;
     
-    const updateState = () => {
+    const update = () => {
       const saved = localStorage.getItem('horseRaceState');
-      if (saved && saved !== lastJson) {
-        lastJson = saved;
+      if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setState({
-            ...parsed,
-            graphicWidth: parsed.graphicWidth || 1280,
-            isGraphicVisible: parsed.isGraphicVisible !== undefined ? parsed.isGraphicVisible : true
-          });
+          if (parsed.raceProgress !== lastRaceProgress || tick === 0) {
+            lastRaceProgress = parsed.raceProgress;
+            setState({
+              ...parsed,
+              graphicWidth: parsed.graphicWidth || 1280,
+              isGraphicVisible: parsed.isGraphicVisible !== undefined ? parsed.isGraphicVisible : true
+            });
+            setTick(t => t + 1);
+          }
         } catch (e) {
-          // ignore parse errors
+          // ignore
         }
       }
+      requestAnimationFrame(update);
     };
     
-    updateState();
-    const interval = setInterval(updateState, 16);
-    return () => clearInterval(interval);
+    const rafId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   const selectedMarker = state.markers.find(m => m.id === state.selectedRaceMarkerId);
