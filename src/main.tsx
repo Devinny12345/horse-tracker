@@ -223,28 +223,32 @@ function BroadcastOnly() {
     isChroma: false,
     chromaColor: '#00ff00',
     graphicWidth: 1280,
-    isGraphicVisible: true
+    isGraphicVisible: true,
+    _timestamp: 0
   });
 
   useEffect(() => {
-    const loadState = () => {
+    let lastJson = '';
+    
+    const updateState = () => {
       const saved = localStorage.getItem('horseRaceState');
-      if (saved) {
+      if (saved && saved !== lastJson) {
+        lastJson = saved;
         try {
           const parsed = JSON.parse(saved);
-          setState(prev => ({
-            ...prev,
+          setState({
             ...parsed,
             graphicWidth: parsed.graphicWidth || 1280,
             isGraphicVisible: parsed.isGraphicVisible !== undefined ? parsed.isGraphicVisible : true
-          }));
+          });
         } catch (e) {
-          console.log('Using default state');
+          // ignore parse errors
         }
       }
     };
-    loadState();
-    const interval = setInterval(loadState, 50);
+    
+    updateState();
+    const interval = setInterval(updateState, 16);
     return () => clearInterval(interval);
   }, []);
 
@@ -325,6 +329,24 @@ function ProducerDashboard() {
       graphicWidth,
       isGraphicVisible
     }));
+  }, [startPos, selectedRaceMarkerId, markers, horses, raceProgress, horseProgresses, isChroma, chromaColor, graphicWidth, isGraphicVisible]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      localStorage.setItem('horseRaceState', JSON.stringify({
+        startPos,
+        selectedRaceMarkerId,
+        markers,
+        horses,
+        raceProgress,
+        horseProgresses,
+        isChroma,
+        chromaColor,
+        graphicWidth,
+        isGraphicVisible
+      }));
+    }, 16);
+    return () => clearInterval(interval);
   }, [startPos, selectedRaceMarkerId, markers, horses, raceProgress, horseProgresses, isChroma, chromaColor, graphicWidth, isGraphicVisible]);
 
   const selectedMarker = markers.find(m => m.id === selectedRaceMarkerId);
